@@ -19,10 +19,13 @@ const FirmwareUpload = () => {
     formData.append("firmware", file);
 
     try {
-      const response = await fetch("/api/upload-firmware", {
-        method: "POST",
-        body: formData,
-      });
+      const response = await fetch(
+        "http://localhost:7070/api/upload-firmware",
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
       const data = await response.json();
       setMessage({
         text: data.message,
@@ -40,7 +43,9 @@ const FirmwareUpload = () => {
       <h1 className="text-2xl font-semibold mb-6">Upload Firmware</h1>
       {message && (
         <div
-          className={`alert ${message.type === "error" ? "text-red-500" : "text-green-500"}`}
+          className={`alert ${
+            message.type === "error" ? "text-red-500" : "text-green-500"
+          }`}
         >
           {message.text}
         </div>
