@@ -1,25 +1,25 @@
-// Navbar.js
 import React from "react";
 import { Link } from "react-router-dom";
+import { AppBar, Toolbar, Typography, Button } from "@mui/material";
 
 const Navbar = () => {
   return (
-    <nav className="bg-indigo-600 p-4">
-      <div className="container mx-auto flex justify-between items-center">
-        <h1 className="text-white font-semibold text-lg">IoT Device Manager</h1>
-        <div className="space-x-4">
-          <Link to="/" className="text-white">
-            Device Management
-          </Link>
-          <Link to="/upload-device" className="text-white">
-            Add Devices
-          </Link>
-          <Link to="/upload-firmware" className="text-white">
-            Upload Firmware
-          </Link>
-        </div>
-      </div>
-    </nav>
+    <AppBar position="static" color="primary">
+      <Toolbar>
+        <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+          IoT Device Manager
+        </Typography>
+        <Button color="inherit" component={Link} to="/">
+          Device Management
+        </Button>
+        <Button color="inherit" component={Link} to="/upload-device">
+          Add Devices
+        </Button>
+        <Button color="inherit" component={Link} to="/upload-firmware">
+          Upload Firmware
+        </Button>
+      </Toolbar>
+    </AppBar>
   );
 };
 

@@ -1,13 +1,38 @@
 import React, { useState } from "react";
+import axios from "axios";
+import { toast } from "react-toastify";
+import {
+  Box,
+  Button,
+  TextField,
+  Typography,
+  CircularProgress,
+  Snackbar,
+  Alert,
+} from "@mui/material";
 
 const FirmwareUpload = () => {
   const [name, setName] = useState("");
   const [file, setFile] = useState(null);
   const [message, setMessage] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  const handleFileSelect = (e) => {
+    const selectedFile = e.target.files[0];
+    setFile(selectedFile);
+    setMessage({
+      text: `Selected file: ${selectedFile.name}`,
+      type: "success",
+    });
+  };
 
   const handleUpload = async (e) => {
     e.preventDefault();
+    setMessage(null); // Clear any previous message
+    setLoading(true);
+
     if (!name || !file) {
+      setLoading(false);
       return setMessage({
         text: "Please provide both firmware name and file",
         type: "error",
@@ -19,55 +44,96 @@ const FirmwareUpload = () => {
     formData.append("firmware", file);
 
     try {
-      const response = await fetch(
-        "http://localhost:7070/api/upload-firmware",
-        {
-          method: "POST",
-          body: formData,
-        }
+      await axios.post(
+        "https://fota-backend.onrender.com/api/upload-firmware",
+        formData
       );
-      const data = await response.json();
       setMessage({
-        text: data.message,
-        type: response.ok ? "success" : "error",
+        text: "Firmware uploaded successfully.",
+        type: "success",
       });
       setName("");
       setFile(null);
+      toast.success("Firmware uploaded successfully.");
     } catch (error) {
-      setMessage({ text: "Failed to upload firmware", type: "error" });
+      console.log(error);
+      toast.error("Failed To Upload Firmware");
+      setMessage({
+        text: error.response?.data?.error || "Failed to upload firmware",
+        type: "error",
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="container mx-auto p-6">
-      <h1 className="text-2xl font-semibold mb-6">Upload Firmware</h1>
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        padding: "2rem",
+      }}
+    >
+      <Typography variant="h4" gutterBottom>
+        Upload Firmware
+      </Typography>
+
       {message && (
-        <div
-          className={`alert ${
-            message.type === "error" ? "text-red-500" : "text-green-500"
-          }`}
+        <Snackbar
+          open={!!message}
+          autoHideDuration={6000}
+          onClose={() => setMessage(null)}
         >
-          {message.text}
-        </div>
+          <Alert
+            severity={message.type}
+            sx={{ width: "100%" }}
+            onClose={() => setMessage(null)}
+          >
+            {message.text}
+          </Alert>
+        </Snackbar>
       )}
-      <form onSubmit={handleUpload} className="space-y-4">
-        <input
-          type="text"
-          placeholder="Firmware Name"
+
+      <Box
+        component="form"
+        onSubmit={handleUpload}
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          gap: "1rem",
+          width: "100%",
+          maxWidth: "400px",
+        }}
+      >
+        <TextField
+          label="Firmware Name"
+          variant="outlined"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="input"
+          required
         />
-        <input
-          type="file"
-          onChange={(e) => setFile(e.target.files[0])}
-          className="input"
-        />
-        <button type="submit" className="btn btn-primary">
+        <Button variant="contained" component="label">
+          {file ? "Choose Another File" : "Choose Firmware File"}
+          <input type="file" hidden onChange={handleFileSelect} required />
+        </Button>
+        {file && (
+          <Box>
+            <Typography variant="body1">Selected file: {file.name}</Typography>
+          </Box>
+        )}
+        <Button
+          type="submit"
+          variant="contained"
+          color="primary"
+          disabled={loading || !file}
+          endIcon={loading && <CircularProgress size={20} />}
+        >
           Upload Firmware
-        </button>
-      </form>
-    </div>
+        </Button>
+      </Box>
+    </Box>
   );
 };
 
