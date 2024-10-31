@@ -1,6 +1,5 @@
-import React, { useState } from "react";
-import axios from "axios";
-import { toast } from "react-toastify";
+// FirmwareUpload.js
+import React from "react";
 import {
   Box,
   Button,
@@ -10,61 +9,23 @@ import {
   Snackbar,
   Alert,
 } from "@mui/material";
+import useFirmwareStore from "../store/firmwareStore";
 
 const FirmwareUpload = () => {
-  const [name, setName] = useState("");
-  const [file, setFile] = useState(null);
-  const [message, setMessage] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const {
+    name,
+    file,
+    message,
+    loading,
+    setName,
+    setFile,
+    setMessage,
+    handleUpload,
+  } = useFirmwareStore();
 
   const handleFileSelect = (e) => {
     const selectedFile = e.target.files[0];
     setFile(selectedFile);
-    setMessage({
-      text: `Selected file: ${selectedFile.name}`,
-      type: "success",
-    });
-  };
-
-  const handleUpload = async (e) => {
-    e.preventDefault();
-    setMessage(null); // Clear any previous message
-    setLoading(true);
-
-    if (!name || !file) {
-      setLoading(false);
-      return setMessage({
-        text: "Please provide both firmware name and file",
-        type: "error",
-      });
-    }
-
-    const formData = new FormData();
-    formData.append("name", name);
-    formData.append("firmware", file);
-
-    try {
-      await axios.post(
-        "https://fota-backend.onrender.com/api/upload-firmware",
-        formData
-      );
-      setMessage({
-        text: "Firmware uploaded successfully.",
-        type: "success",
-      });
-      setName("");
-      setFile(null);
-      toast.success("Firmware uploaded successfully.");
-    } catch (error) {
-      console.log(error);
-      toast.error("Failed To Upload Firmware");
-      setMessage({
-        text: error.response?.data?.error || "Failed to upload firmware",
-        type: "error",
-      });
-    } finally {
-      setLoading(false);
-    }
   };
 
   return (
@@ -98,7 +59,10 @@ const FirmwareUpload = () => {
 
       <Box
         component="form"
-        onSubmit={handleUpload}
+        onSubmit={(e) => {
+          e.preventDefault();
+          handleUpload();
+        }}
         sx={{
           display: "flex",
           flexDirection: "column",

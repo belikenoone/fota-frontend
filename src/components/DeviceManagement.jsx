@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import axios from "axios";
+import { useEffect } from "react";
+import useDeviceStore from "../store/deviceStore";
 import { toast } from "react-toastify";
 import {
   Box,
@@ -9,6 +9,7 @@ import {
   FormControlLabel,
   Paper,
   Select,
+  MenuItem,
   Table,
   TableBody,
   TableCell,
@@ -16,83 +17,27 @@ import {
   TableHead,
   TableRow,
   Typography,
-  MenuItem,
 } from "@mui/material";
 
 const DeviceManagement = () => {
-  const [devices, setDevices] = useState([]);
-  const [firmwares, setFirmwares] = useState([]);
-  const [selectedFirmware, setSelectedFirmware] = useState("");
-  const [selectedDevices, setSelectedDevices] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  const {
+    loading,
+    buttonLoading,
+    error,
+    success,
+    allDevices,
+    firmwares,
+    selectedDevices,
+    selectedFirmware,
+    fetchData,
+    selectDevice,
+    selectFirmware,
+    initiateUpdate,
+  } = useDeviceStore();
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [devicesRes, firmwaresRes] = await Promise.all([
-          axios.get("https://fota-backend.onrender.com/api/devices"),
-          axios.get("https://fota-backend.onrender.com/api/firmwares"),
-        ]);
-        setDevices(devicesRes.data.allDevices);
-        setFirmwares(firmwaresRes.data.allFirmwares);
-      } catch (error) {
-        setError("Error fetching data");
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchData();
-  }, []);
-
-  const handleInitiateUpdate = async () => {
-    setLoading(true);
-    setError("");
-    setSuccess("");
-    try {
-      await axios.post(
-        "https://fota-backend.onrender.com/api/initiate-update",
-        {
-          deviceIds: selectedDevices,
-          firmwareName: selectedFirmware,
-        }
-      );
-      setSuccess("Update initiated successfully.");
-      setSelectedDevices([]);
-      setSelectedFirmware("");
-      toast.success("Initiate Update Successful For Selected Devices");
-      await fetchData();
-    } catch (error) {
-      toast.error("Failed To Initiate Update");
-      setError("Failed to initiate update.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDeviceSelect = (deviceId) => {
-    setSelectedDevices((prev) =>
-      prev.includes(deviceId)
-        ? prev.filter((id) => id !== deviceId)
-        : [...prev, deviceId]
-    );
-  };
-
-  const fetchData = async () => {
-    try {
-      const [devicesRes, firmwaresRes] = await Promise.all([
-        axios.get("https://fota-backend.onrender.com/api/devices"),
-        axios.get("https://fota-backend.onrender.com/api/firmwares"),
-      ]);
-      setDevices(devicesRes.data.allDevices);
-      setFirmwares(firmwaresRes.data.allFirmwares);
-    } catch (error) {
-      setError("Error fetching data");
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [fetchData]);
 
   return (
     <Box sx={{ p: 4 }}>
@@ -123,7 +68,7 @@ const DeviceManagement = () => {
             </Typography>
             <Select
               value={selectedFirmware}
-              onChange={(e) => setSelectedFirmware(e.target.value)}
+              onChange={(e) => selectFirmware(e.target.value)}
               fullWidth
               displayEmpty
               inputProps={{ "aria-label": "Select Firmware" }}
@@ -149,7 +94,7 @@ const DeviceManagement = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {devices.map((device) => (
+                {allDevices.map((device) => (
                   <TableRow key={device.deviceId}>
                     <TableCell>{device.deviceId}</TableCell>
                     <TableCell>{device.pendingUpdate ? "Yes" : "No"}</TableCell>
@@ -162,7 +107,7 @@ const DeviceManagement = () => {
                         control={
                           <Checkbox
                             checked={selectedDevices.includes(device.deviceId)}
-                            onChange={() => handleDeviceSelect(device.deviceId)}
+                            onChange={() => selectDevice(device.deviceId)}
                           />
                         }
                         label=""
@@ -177,13 +122,13 @@ const DeviceManagement = () => {
           <Button
             variant="contained"
             color="primary"
-            onClick={handleInitiateUpdate}
+            onClick={initiateUpdate}
             disabled={
-              loading || !selectedFirmware || selectedDevices.length === 0
+              !selectedFirmware || selectedDevices.length === 0 || buttonLoading
             }
             sx={{ mt: 4 }}
           >
-            {loading ? "Initiating Update..." : "Initiate Update"}
+            {buttonLoading ? "Initiating Update..." : "Initiate Update"}
           </Button>
         </>
       )}

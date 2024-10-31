@@ -1,5 +1,3 @@
-import { useState } from "react";
-import axios from "axios";
 import {
   Container,
   Typography,
@@ -8,31 +6,14 @@ import {
   Box,
   CircularProgress,
 } from "@mui/material";
-import { toast } from "react-toastify";
+import useDeviceStore from "../store/deviceStore";
 
 const DeviceUpload = () => {
-  const [deviceIds, setDeviceIds] = useState("");
-  const [loading, setLoading] = useState(false);
+  const { deviceIds, setDeviceIds, uploadDevices, loading } = useDeviceStore();
 
   const handleUpload = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    try {
-      const response = await axios.post(
-        "https://fota-backend.onrender.com/api/add-device",
-        {
-          deviceId: deviceIds.split(",").map((id) => id.trim()),
-        }
-      );
-      console.log(response.data);
-      toast.success("Devices Added Successfully");
-      setDeviceIds("");
-    } catch (error) {
-      console.log(error);
-      toast.error("Failed To Upload Devices");
-    } finally {
-      setLoading(false);
-    }
+    await uploadDevices();
   };
 
   return (
@@ -46,8 +27,8 @@ const DeviceUpload = () => {
           fullWidth
           label="Device IDs"
           placeholder="Enter device IDs (comma separated)"
-          value={deviceIds}
-          onChange={(e) => setDeviceIds(e.target.value)}
+          value={deviceIds} // value tied to store
+          onChange={(e) => setDeviceIds(e.target.value)} // updates store
           variant="outlined"
           margin="normal"
           helperText="Please enter device IDs separated by commas"
